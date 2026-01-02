@@ -1,4 +1,47 @@
 import 'package:flutter/material.dart';
+import 'package:uuid/uuid.dart';
+
+const uuid = Uuid();
+
+class Season {
+  final String id;
+  String name;
+  DateTime startDate;
+  DateTime? endDate;
+  bool isActive;
+
+  Season({
+    required this.id,
+    required this.name,
+    required this.startDate,
+    this.endDate,
+    this.isActive = true,
+  });
+}
+
+class League {
+  final String id;
+  String name;
+  String seasonId;
+
+  League({
+    required this.id,
+    required this.name,
+    required this.seasonId,
+  });
+}
+
+class Venue {
+  final String id;
+  String name;
+  String address;
+
+  Venue({
+    required this.id,
+    required this.name,
+    required this.address,
+  });
+}
 
 class Player {
   final String id;
@@ -20,6 +63,7 @@ class Team {
   final String id;
   final String name;
   final List<Player> players;
+  String? venueId; // Optional home venue
   int played;
   int won;
   int drawn;
@@ -30,6 +74,7 @@ class Team {
     required this.id,
     required this.name,
     required this.players,
+    this.venueId,
     this.played = 0,
     this.won = 0,
     this.drawn = 0,
@@ -59,7 +104,11 @@ class LeagueMatch {
 }
 
 class LeagueData extends ChangeNotifier {
+  List<Season> seasons = [];
+  List<League> leagues = [];
+  List<Venue> venues = [];
   List<Team> teams = [];
+  List<Player> players = []; // Global list of players
   List<LeagueMatch> matches = [];
 
   LeagueData() {
@@ -67,6 +116,19 @@ class LeagueData extends ChangeNotifier {
   }
 
   void _generateMockData() {
+    // Mock Seasons
+    var s1 = Season(id: 's1', name: 'Winter 2023', startDate: DateTime(2023, 9, 1));
+    seasons.add(s1);
+
+    // Mock Leagues
+    var l1 = League(id: 'l1', name: 'Premier Division', seasonId: 's1');
+    leagues.add(l1);
+
+    // Mock Venues
+    var v1 = Venue(id: 'v1', name: 'The Red Lion', address: '123 High St');
+    var v2 = Venue(id: 'v2', name: 'The Kings Head', address: '45 Queen Rd');
+    venues.addAll([v1, v2]);
+
     // Create Players
     var p1 = Player(id: 'p1', name: 'Phil Taylor');
     var p2 = Player(id: 'p2', name: 'Michael van Gerwen');
@@ -74,11 +136,13 @@ class LeagueData extends ChangeNotifier {
     var p4 = Player(id: 'p4', name: 'Gerwyn Price');
     var p5 = Player(id: 'p5', name: 'Fallon Sherrock');
     var p6 = Player(id: 'p6', name: 'Raymond van Barneveld');
+    
+    players.addAll([p1, p2, p3, p4, p5, p6]);
 
     // Create Teams
-    var t1 = Team(id: 't1', name: 'The Power House', players: [p1, p6]);
-    var t2 = Team(id: 't2', name: 'Green Machine', players: [p2, p4]);
-    var t3 = Team(id: 't3', name: 'Snakebite Club', players: [p3, p5]);
+    var t1 = Team(id: 't1', name: 'The Power House', players: [p1, p6], venueId: 'v1');
+    var t2 = Team(id: 't2', name: 'Green Machine', players: [p2, p4], venueId: 'v2');
+    var t3 = Team(id: 't3', name: 'Snakebite Club', players: [p3, p5], venueId: 'v1');
 
     // Update stats manually for mock
     t1.played = 5; t1.won = 4; t1.points = 12;
@@ -119,5 +183,31 @@ class LeagueData extends ChangeNotifier {
     } catch (e) {
       return null;
     }
+  }
+
+  // Admin Methods
+  void addSeason(String name, DateTime startDate) {
+    seasons.add(Season(id: uuid.v4(), name: name, startDate: startDate));
+    notifyListeners();
+  }
+
+  void addLeague(String name, String seasonId) {
+    leagues.add(League(id: uuid.v4(), name: name, seasonId: seasonId));
+    notifyListeners();
+  }
+
+  void addVenue(String name, String address) {
+    venues.add(Venue(id: uuid.v4(), name: name, address: address));
+    notifyListeners();
+  }
+
+  void addPlayer(String name) {
+    players.add(Player(id: uuid.v4(), name: name));
+    notifyListeners();
+  }
+
+  void addTeam(String name, String? venueId, List<Player> selectedPlayers) {
+    teams.add(Team(id: uuid.v4(), name: name, players: selectedPlayers, venueId: venueId));
+    notifyListeners();
   }
 }
